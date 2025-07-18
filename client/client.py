@@ -14,30 +14,30 @@ def main():
             
             # Nhận thông báo từ server 
             welcome_msg = client_socket.recv(1024).decode()
-            print("[SERVER]:", welcome_msg)
+            print("[SERVER]: ", welcome_msg)
         
             # Chờ server ghép cặp và bắt đầu trận
             match_msg = client_socket.recv(1024).decode()
-            print("[SERVER]:", match_msg)
+            print("[SERVER]: ", match_msg)
         
             # Nhập lựa chọn từ người chơi
             i = 3
             while i > 0: 
                 round_msg = client_socket.recv(1024).decode()
-                print("[SERVER]:", round_msg)
+                print("[SERVER]: ", round_msg)
                 choice = input("Nhap lua chon: ").strip().lower()
                 client_socket.sendall(choice.encode())
 
                 # Nhận kết quả từ server
                 result = client_socket.recv(1024).decode()
-                print("[KET QUA]:", result)
+                print("\n[KET QUA]:", result)
                 i -= 1
             final = client_socket.recv(1024).decode()
-            print("[SERVER]:", final)
+            print("[SERVER]: ", final)
             again = input("Nhap lua chon: ").strip().lower()
             client_socket.sendall(again.encode())
             msg = client_socket.recv(1024).decode()
-            print("[SERVER]:", msg)
+            print("\n[SERVER]: ", msg)
             if again == "no":
                 break
     except ConnectionRefusedError:

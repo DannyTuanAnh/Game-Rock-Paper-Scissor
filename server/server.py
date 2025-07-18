@@ -40,8 +40,8 @@ def receive_choice(client1, client2):
 def handle_match(client1, client2):
     try: 
         # Gửi thông báo ghép cặp thành công
-        client1.sendall(b"Da ghep cap! Ban co 3 vong dau!")
-        client2.sendall(b"Da ghep cap! Ban co 3 vong dau!")
+        client1.sendall(b"Da ghep cap! Ban co 3 vong dau!\n")
+        client2.sendall(b"Da ghep cap! Ban co 3 vong dau!\n")
         count_result1 = 0
         count_result2 = 0
         i = 3
@@ -56,11 +56,11 @@ def handle_match(client1, client2):
             # Kiểm tra dữ liệu vào
             valid_choices = ['rock', 'paper', 'scissor']
             if choice1 not in valid_choices:
-                client1.sendall(b"Lua chon cua ban khong hop le!\n")
+                client1.sendall(b"Lua chon cua ban khong hop le! Tran dau ket thuc\n")
                 client2.sendall(b"Doi thu da chon sai, tran dau ket thuc.\n")
                 return
             if choice2 not in valid_choices:
-                client2.sendall(b"Lua chon cua ban khong hop le!\n")
+                client2.sendall(b"Lua chon cua ban khong hop le! Tran dau ket thuc\n")
                 client1.sendall(b"Doi thu da chon sai, tran dau ket thuc.\n")
                 return
 
@@ -88,14 +88,14 @@ def handle_match(client1, client2):
         # Sau 3 vòng đấu, so sánh kết quả
         # hỏi có muốn chơi tiếp không
         if count_result1 > count_result2:
-            client1.sendall(b"Ban da thang cuoc! Chuc mung!\nBan co muon choi tiep khong? (yes/no) ")
-            client2.sendall(b"Ban da thua cuoc! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
+            client1.sendall(b"Ban da thang cuoc! Chuc mung!\n\n[SERVER]: Ban co muon choi tiep khong? (yes/no) ")
+            client2.sendall(b"Ban da thua cuoc! Cam on da choi!\n\n[SERVER]: Ban co muon choi tiep khong? (yes/no) ")
         elif count_result1 < count_result2:
-            client1.sendall(b"Ban da thua cuoc! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
-            client2.sendall(b"Ban da thang cuoc! Chuc mung!\nBan co muon choi tiep khong? (yes/no) ")
+            client1.sendall(b"Ban da thua cuoc! Cam on da choi!\n\n[SERVER]: Ban co muon choi tiep khong? (yes/no) ")
+            client2.sendall(b"Ban da thang cuoc! Chuc mung!\n\n[SERVER]: Ban co muon choi tiep khong? (yes/no) ")
         else:
-            client1.sendall(b"Tran dau ket thuc voi ket qua hoa! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
-            client2.sendall(b"Tran dau ket thuc voi ket qua hoa! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
+            client1.sendall(b"Tran dau ket thuc voi ket qua hoa! Cam on da choi!\n\n[SERVER]: Ban co muon choi tiep khong? (yes/no) ")
+            client2.sendall(b"Tran dau ket thuc voi ket qua hoa! Cam on da choi!\n\n[SERVER]: Ban co muon choi tiep khong? (yes/no) ")
         
         # Nhận lựa chọn tiếp tục chơi hoặc thoát từ cả hai client
         again1 = client1.recv(1024).decode().strip().lower()
@@ -122,14 +122,14 @@ def handle_match(client1, client2):
         else:
             client1.sendall(b"Da bat dau tran moi!\n")
             client2.sendall(b"Da bat dau tran moi!\n")
+            # Tiếp tục trận đấu mới
+            client_addr.put(client1_addr)
+            client_addr.put(client2_addr)
+            # hiển thị client tiếp tục cho server
+            print(f"[CONTINUE] Client1 ({client1_addr}) và Client2 ({client2_addr}) tiếp tục chơi.")
             handle_match(client1, client2)
     except Exception as e:
-        print("[ERROR] Trong match: ", e)
-    
-    # Đóng client
-    # finally:
-    #     client1.close()  
-    #     client2.close()  
+        print("[ERROR] Trong match: ", e) 
 
 #   xử lý kết nối từ client, đưa client vào hàng đợi
 def handle_client(conn, addr):
@@ -138,19 +138,21 @@ def handle_client(conn, addr):
         waiting_clients.put(conn)
         client_addr.put(addr)
         
-        #Nếu có đủ 2 client thì tạo trận
-        if waiting_clients.qsize() >= 2:
-            client1 = waiting_clients.get() 
-            client2 = waiting_clients.get() 
-            match_thread = threading.Thread(target = handle_match, args = (client1, client2))
-            match_thread.start()
+        # vòng lặp chạy cho tới khi nào có đủ 2 client để ghép cặp
+        while True:
+            #Nếu có đủ 2 client thì tạo trận
+            if waiting_clients.qsize() >= 2:
+                client1 = waiting_clients.get() 
+                client2 = waiting_clients.get() 
+                match_thread = threading.Thread(target = handle_match, args = (client1, client2))
+                match_thread.start()
     except Exception as e:
         print("[ERROR] Trong handle_client: ", e)
 
 # nếu 1 trong 2 không muốn chơi tiếp thì người còn lại sẽ tiếp tục ghép cặp
 def continue_clients(conn, addr):
     try:
-        conn.sendall("Chờ ghép cặp với người chơi mới...".encode())
+        conn.sendall("Chờ ghép cặp với người chơi mới...\n".encode())
         # Thêm người chơi vào hàng chờ
         waiting_clients.put(conn)
         client_addr.put(addr)
