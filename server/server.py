@@ -45,13 +45,16 @@ def handle_match(client1, client2):
         count_result1 = 0
         count_result2 = 0
         i = 3
+        client1_addr = client_addr.get()
+        client2_addr = client_addr.get()
+        
         while i > 0:
             client1.sendall(f"Vong {4 - i}\nChon rock / scissor / paper".encode())
             client2.sendall(f"Vong {4 - i}\nChon rock / scissor / paper".encode())
             choice1, choice2 = receive_choice(client1, client2)
             
             # Kiểm tra dữ liệu vào
-            valid_choices = ['rock', 'paper', 'scissors']
+            valid_choices = ['rock', 'paper', 'scissor']
             if choice1 not in valid_choices:
                 client1.sendall(b"Lua chon cua ban khong hop le!\n")
                 client2.sendall(b"Doi thu da chon sai, tran dau ket thuc.\n")
@@ -60,8 +63,6 @@ def handle_match(client1, client2):
                 client2.sendall(b"Lua chon cua ban khong hop le!\n")
                 client1.sendall(b"Doi thu da chon sai, tran dau ket thuc.\n")
                 return
-            client1_addr = clients_addr.get()
-            client2_addr = clients_addr.get()
 
             # in ra server
             print(f"[MATCH][ROUND {4 - i}] Client1 ({client1_addr}) chon: {choice1} | Client 2 ({client2_addr}) chon: {choice2}")
@@ -89,9 +90,12 @@ def handle_match(client1, client2):
         if count_result1 > count_result2:
             client1.sendall(b"Ban da thang cuoc! Chuc mung!\nBan co muon choi tiep khong? (yes/no) ")
             client2.sendall(b"Ban da thua cuoc! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
-        else:
+        elif count_result1 < count_result2:
             client1.sendall(b"Ban da thua cuoc! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
             client2.sendall(b"Ban da thang cuoc! Chuc mung!\nBan co muon choi tiep khong? (yes/no) ")
+        else:
+            client1.sendall(b"Tran dau ket thuc voi ket qua hoa! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
+            client2.sendall(b"Tran dau ket thuc voi ket qua hoa! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
         
         again1 = client1.recv(1024).decode().strip().lower()
         again2 = client2.recv(1024).decode().strip().lower()
@@ -141,8 +145,9 @@ def accept_clients():
 # Bắt đầu server
 accept_clients()
 
-# Thêm tính năng thoát, xử lý logic vì khi 2 client đi vào đang đợi nhập 
+# xử lý logic vì khi 2 client đi vào đang đợi nhập 
 # 1client khác đi vào thì sẽ hiện đang đợi ghép cặp nhưng nếu tắt terminal
 # thì server vẫn còn nhận client đó nên khi có tiếp 1 client thứ 4 vào thì
 # nó sẽ được ghép cặp với cái client xóa terminal
-# thêm 1 hàng đợi clien_addr cho lưu thông tin port
+# thêm 1 hàng đợi client_addr cho lưu thông tin port
+# khi 1 client chọn không tiếp tục và client khác chọn tiếp tục thì cả 2 đều bị văng ra 
