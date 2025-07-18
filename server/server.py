@@ -97,29 +97,41 @@ def handle_match(client1, client2):
             client1.sendall(b"Tran dau ket thuc voi ket qua hoa! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
             client2.sendall(b"Tran dau ket thuc voi ket qua hoa! Cam on da choi!\nBan co muon choi tiep khong? (yes/no) ")
         
+        # Nhận lựa chọn tiếp tục chơi hoặc thoát từ cả hai client
         again1 = client1.recv(1024).decode().strip().lower()
         again2 = client2.recv(1024).decode().strip().lower()
             
         if again1 == "no" and again2 == "no":
             client1.sendall(b"Cam on da choi! Hen gap lai!\n")
             client2.sendall(b"Cam on da choi! Hen gap lai!\n")
-            return
+            # đóng cả hai kết nối
+            client1.close()  
+            client2.close()  
         elif again1 == "no" and again2 == "yes":
             client1.sendall(b"Cam on da choi! Hen gap lai!\n")
             client2.sendall(b"Doi thu da roi, vui long doi ghep cap.\n")
-            handle_client(client2, client2_addr)
+            continue_clients(client2, client2_addr)
+            # đóng kết nối client1
+            client1.close()   
         elif again1 == "yes" and again2 == "no":
             client1.sendall(b"Doi thu da roi, vui long doi ghep cap.\n")
             client2.sendall(b"Cam on da choi! Hen gap lai!\n")
-            handle_client(client1, client1_addr)
+            continue_clients(client1, client1_addr)
+            # đóng kết nối client2
+            client2.close()  
+        else:
+            client1.sendall(b"Da bat dau tran moi!\n")
+            client2.sendall(b"Da bat dau tran moi!\n")
+            handle_match(client1, client2)
     except Exception as e:
         print("[ERROR] Trong match: ", e)
     
     # Đóng client
-    finally:
-        client1.close()  
-        client2.close()  
-        
+    # finally:
+    #     client1.close()  
+    #     client2.close()  
+
+#   xử lý kết nối từ client, đưa client vào hàng đợi
 def handle_client(conn, addr):
     try:
         conn.sendall(b"Chao mung! Dang ghep cap....\n")
@@ -134,6 +146,18 @@ def handle_client(conn, addr):
             match_thread.start()
     except Exception as e:
         print("[ERROR] Trong handle_client: ", e)
+
+# nếu 1 trong 2 không muốn chơi tiếp thì người còn lại sẽ tiếp tục ghép cặp
+def continue_clients(conn, addr):
+    try:
+        conn.sendall("Chờ ghép cặp với người chơi mới...".encode())
+        # Thêm người chơi vào hàng chờ
+        waiting_clients.put(conn)
+        client_addr.put(addr)
+        print(f"[CONNECT] Client cũ {addr}")
+    except Exception as e:
+        print(f"Lỗi khi đưa {addr} vào hàng chờ tiếp tục: {e}")
+        
 
 # luồng chính 
 def accept_clients():
