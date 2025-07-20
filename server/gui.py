@@ -26,7 +26,7 @@ paper_img = pygame.image.load('asset/paper.png')
 scissor_img = pygame.image.load('asset/scissor.png')
 
 # Tạo Rect cho từng hình để kiểm tra va chạm
-play_rect = play_img.get_rect(center = (290, 550))
+play_rect = play_img.get_rect(center = (290, 500))
 # Kích thước của nút start nhỏ hơn
 start_width = 180
 start_height =60
