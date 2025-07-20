@@ -1,113 +1,108 @@
-import pygame
+import pygame, sys
 import socket
 import threading
+
 
 # Thông tin server
 HOST = '127.0.0.1'
 PORT = 50074
 
-# Pygame setup
+# khởi động thư viện pygame
 pygame.init()
-WIDTH, HEIGHT = 600, 400
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Client: Rock Scissor Paper")
-font = pygame.font.SysFont(None, 30)
-WHITE, BLACK = (255, 255, 255), (0, 0, 0)
 
-# Các lựa chọn
-buttons = []
-choices = ["rock", "scissor", "paper"]
-message_lines = []  # để hiển thị tin nhắn từ server
-user_choice = ""
-send_choice = False
-waiting_result = False
-received_result = ""
+# thiết lập màn hình
+WIDTH, HEIGHT = 580, 700
+screen = pygame.display.set_mode((580, 700))
 
-# Socket setup
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((HOST, PORT))
+# thiết lập fps
+clock = pygame.time.Clock()
 
-# Hàm hiển thị chữ
-def draw_text(text, x, y):
-    label = font.render(text, True, BLACK)
-    screen.blit(label, (x, y))
+# chèn background
+start_bg = pygame.image.load('asset/start.jpg')
+play_img = pygame.image.load('asset/play.png')
+play_bg = pygame.image.load('asset/bg.jpg')
+rock_img = pygame.image.load('asset/rock.png')
+paper_img = pygame.image.load('asset/paper.png')
+scissor_img = pygame.image.load('asset/scissor.png')
 
-# Nút
-def draw_button(text, x, y, w, h):
-    rect = pygame.Rect(x, y, w, h)
-    pygame.draw.rect(screen, BLACK, rect, 2)
-    label = font.render(text, True, BLACK)
-    screen.blit(label, (x + 10, y + 10))
-    return rect
+# Tạo Rect cho từng hình để kiểm tra va chạm
+play_rect = play_img.get_rect(center = (290, 550))
+# Kích thước của nút start nhỏ hơn
+start_width = 180
+start_height =60
+# Tạo rect nhỏ hơn nằm ở trọng tâm của play_button
+play_button_rect = pygame.Rect(0, 0, start_width, start_height)
+play_button_rect.center = play_rect.center
 
-# Nhận tin nhắn từ server liên tục
-def receive_thread():
-    global message_lines, waiting_result, received_result
-    while True:
-        try:
-            msg = client.recv(1024).decode()
-            if waiting_result:
-                received_result = msg
-                waiting_result = False
-            else:
-                message_lines.append(msg)
-        except:
-            break
+scissor_rect = scissor_img.get_rect(center=(70, 600))
+# Kích thước của nút đấm nhỏ hơn
+scissor_width = 50
+scissor_height =70
+# Tạo rect nhỏ hơn nằm ở trọng tâm của play_button
+scissor_button_rect = pygame.Rect(0, 0, scissor_width, scissor_height)
+scissor_button_rect.center = scissor_rect.center
 
-# Gửi lựa chọn tới server
-def send_choice_to_server(choice):
-    global waiting_result
-    client.sendall(choice.encode())
-    waiting_result = True
+rock_rect = rock_img.get_rect(center=(270, 600))
+# Kích thước của nút đấm nhỏ hơn
+rock_width = 60
+rock_height =60
+# Tạo rect nhỏ hơn nằm ở trọng tâm của rock_rect
+rock_button_rect = pygame.Rect(0, 0, rock_width, rock_height)
+rock_button_rect.center = rock_rect.center
 
-threading.Thread(target=receive_thread, daemon=True).start()
+paper_rect = paper_img.get_rect(center= (500, 600))
+# Kích thước của nút đấm nhỏ hơn
+paper_width = 60
+paper_height =60
+# Tạo rect nhỏ hơn nằm ở trọng tâm của paper_rect
+paper_button_rect = pygame.Rect(0, 0, paper_width, paper_height)
+paper_button_rect.center = paper_rect.center
 
-# Nút lựa chọn
-def setup_buttons():
-    btns = []
-    for i, choice in enumerate(choices):
-        rect = draw_button(choice.upper(), 100 + i * 140, 280, 100, 40)
-        btns.append((choice, rect))
-    return btns
+game_stated = False
 
-buttons = setup_buttons()
+def draw_start_screen():
+    screen.blit(start_bg, (0, 0))
+    screen.blit(play_img, play_rect)
 
-# Main loop
-running = True
-while running:
-    screen.fill(WHITE)
+def draw_game_screen():
+    screen.blit(play_bg, (0, 0))
+    screen.blit(rock_img, rock_rect)
+    screen.blit(paper_img, paper_rect)
+    screen.blit(scissor_img, scissor_rect)
 
-    # Vẽ khung text
-    y = 20
-    draw_text("Tin nhắn từ server:", 20, y)
-    for line in message_lines[-5:]:
-        y += 30
-        draw_text(line, 20, y)
-
-    # Hiển thị kết quả nếu có
-    if received_result:
-        draw_text(f"Kết quả: {received_result}", 20, y + 40)
-
-    # Vẽ nút lựa chọn
-    draw_text("Chọn của bạn:", 20, 250)
-    for choice, rect in buttons:
-        pygame.draw.rect(screen, BLACK, rect, 2)
-        label = font.render(choice.upper(), True, BLACK)
-        screen.blit(label, (rect.x + 10, rect.y + 10))
-
+# vòng lặp để hiển thị màn hình
+while True:
+    
+    # bắt sự kiện
     for event in pygame.event.get():
+        
+        
+        # Kiểm tra sự kiện nếu người dùng thoát ra ngoài
         if event.type == pygame.QUIT:
-            running = False
+            pygame.quit()
+            # thoát hệ thống
+            sys.exit()
+        # Kiểm tra sự kiện click chuột  
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            if play_button_rect.collidepoint(mouse_pos):
+                game_stated = True
+                
+            if game_stated:
+                if rock_button_rect.collidepoint(mouse_pos):
+                    print("Bạn đã chọn: rock")
+                elif paper_button_rect.collidepoint(mouse_pos):
+                    print("Bạn đã chọn: paper")
+                elif scissor_button_rect.collidepoint(mouse_pos):
+                    print("Bạn đã chọn: scissor")   
+    if game_stated:
+        draw_game_screen()
+    else:
+        draw_start_screen()
+            
+    # cửa sổ hiển thị
+    pygame.display.update()
+    
+    # chỉnh thông số fps
+    clock.tick(120)
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = pygame.mouse.get_pos()
-            for choice, rect in buttons:
-                if rect.collidepoint(pos) and not waiting_result:
-                    user_choice = choice
-                    send_choice_to_server(user_choice)
-                    received_result = ""
-
-    pygame.display.flip()
-
-client.close()
-pygame.quit()
