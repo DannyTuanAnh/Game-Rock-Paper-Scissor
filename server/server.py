@@ -3,8 +3,8 @@ import threading
 import queue
 
 # Thiết lập localhost và port cho server
-HOST = "127.0.0.1" #localhost
-PORT = 50074
+HOST = "192.168.84.41" #ip máy chủ
+PORT = 50047
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, PORT))

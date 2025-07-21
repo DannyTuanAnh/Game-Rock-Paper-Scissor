@@ -1,8 +1,8 @@
 import socket
 
 # Thông tin kết nối server
-HOST = "127.0.0.1" 
-PORT = 50074
+HOST = "192.168.84.41" 
+PORT = 50047
 
 def main():
     try:
